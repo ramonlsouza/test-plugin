@@ -1,60 +1,199 @@
-import { BbbPluginSdk } from 'bigbluebutton-html-plugin-sdk';
+import {
+  FloatingWindow,
+  BbbPluginSdk,
+  DataChannelTypes,
+  RESET_DATA_CHANNEL,
+} from 'bigbluebutton-html-plugin-sdk';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import * as ReactDOM from 'react-dom/client';
 
-interface PluginHelloWorldProps {
+interface PluginPinMessageProps {
   pluginUuid: string;
 }
 
-function PluginHelloWorld(
-  { pluginUuid }: PluginHelloWorldProps,
-): React.ReactElement<PluginHelloWorldProps> {
+function PluginPinMessage(
+  { pluginUuid }: PluginPinMessageProps,
+): React.ReactElement<PluginPinMessageProps> {
   BbbPluginSdk.initialize(pluginUuid);
   const pluginApi = BbbPluginSdk.getPluginApi(pluginUuid);
 
-  interface MessageIdAndCodeLanguage {
+  interface Message {
     messageId: string;
     messageText: string;
+    senderUserId: string;
   }
 
+  interface PinnedMessage {
+    senderUserId: string;
+    messageText: string;
+    messageId: string;
+    pinnedBy: string;
+  }
+
+  const {
+    data: pinnedMessageResponse,
+    pushEntry: pushPinnedMessage,
+    deleteEntry: deletePinnedMessage,
+  } = pluginApi.useDataChannel<PinnedMessage>('pinMessage', DataChannelTypes.LATEST_ITEM);
+
+  const currentUser = pluginApi.useCurrentUser();
+
+  useEffect(() => {
+    // highlight the pinned message in the chat window
+    const lastPinnedMessage = pinnedMessageResponse?.data?.length >= 1
+      ? pinnedMessageResponse?.data[0]?.payloadJson?.messageText
+      : '';
+
+    if (lastPinnedMessage === '') {
+      pluginApi.setFloatingWindows([]);
+      return;
+    }
+
+    // TODO: if the message is edited/removed, the pinned message should be unpinned or updated
+    // TODO: is is possible to make it have the same size/position as the chat area?
+    const floatingWindow = new FloatingWindow({
+      top: 50,
+      left: 50,
+      movable: true,
+      backgroundColor: '#f1f1f1',
+      boxShadow: '2px 2px 10px #777',
+      contentFunction: (element: HTMLElement) => {
+        const root = ReactDOM.createRoot(element);
+        root.render(
+          <div
+            className="pinned-message"
+            style={{
+              backgroundColor: '#f8f8f8',
+              borderLeft: '3px solid #ffcc00',
+              padding: '10px 15px',
+              position: 'relative',
+            }}
+            role="region"
+            aria-label="Pinned message"
+          >
+            <div
+              className="pinned-message-header"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '5px',
+              }}
+            >
+              <div
+                className="header-left"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <span
+                  className="pin-icon"
+                  aria-hidden="true"
+                  style={{
+                    marginRight: '5px',
+                  }}
+                >
+                  📌
+                </span>
+                <span
+                  className="pinned-label"
+                  style={{
+                    fontWeight: 'bold',
+                    color: '#555',
+                  }}
+                >
+                  Pinned Message
+                </span>
+              </div>
+              {currentUser?.data?.role === 'MODERATOR' && (
+                <button
+                  className="unpin-button"
+                  aria-label="Unpin this message"
+                  onClick={() => {
+                    deletePinnedMessage([RESET_DATA_CHANNEL]);
+                  }}
+                  type="button"
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    padding: '3px 8px',
+                    fontSize: '0.8em',
+                    color: '#666',
+                    cursor: 'pointer',
+                    marginLeft: '10px',
+                  }}
+                >
+                  Unpin
+                </button>
+              )}
+            </div>
+            <div
+              className="pinned-message-content"
+              style={{
+                margin: '8px 0',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {lastPinnedMessage}
+            </div>
+            <div
+              className="pinned-message-meta"
+              style={{
+                fontSize: '0.9em',
+                color: '#666',
+                marginTop: '5px',
+              }}
+            >
+              {`Pinned by ${pinnedMessageResponse?.data[0]?.payloadJson?.pinnedBy}`}
+            </div>
+          </div>,
+        );
+        return root;
+      },
+    });
+    pluginApi.setFloatingWindows([floatingWindow]);
+  }, [pinnedMessageResponse, currentUser]);
+
   const [
-    chatMessagesToApplyHighlights,
-    setChatIdsToApplyHighlights,
-  ] = useState<MessageIdAndCodeLanguage[]>([]);
+    chatMessages,
+    setChatMessages,
+  ] = useState<Message[]>([]);
 
   const responseLoadedChatMessages = pluginApi.useLoadedChatMessages();
 
   useEffect(() => {
     if (responseLoadedChatMessages.data) {
-      const messagesToHighlight = responseLoadedChatMessages.data.filter(
+      const loadedMessages = responseLoadedChatMessages.data.filter(
         (message) => message.message !== '',
       ).map((message) => ({
         messageId: message.messageId,
         messageText: message.message,
+        senderUserId: message.senderUserId,
       }));
-      setChatIdsToApplyHighlights(messagesToHighlight);
+      setChatMessages(loadedMessages);
     }
   }, [responseLoadedChatMessages]);
 
-  const chatMessagesDomElements = pluginApi.useChatMessageDomElements(chatMessagesToApplyHighlights
+  const chatMessagesDomElements = pluginApi.useChatMessageDomElements(chatMessages
     .map((message) => message.messageId));
 
   useEffect(() => {
+    if (currentUser?.data?.role !== 'MODERATOR') {
+      return;
+    }
+
     chatMessagesDomElements?.map((chatMessageDomElement) => {
-      // TODO: send message to the data-channel
-      // TODO: highlight the pinned message in the chat window
-      // TODO: this option should only be available for moderators
-      // TODO: only one message can be pinned - pinning a second message should unpin the first one
-      // TODO: if the message is edited/removed, the pinned message should be unpinned or updated
-
-      const toolbar = chatMessageDomElement.querySelector('.chat-message-toolbar');
-      if (toolbar === null) {
-        return false;
-      }
-
       // only append if the button is not already there
       const codeButton = chatMessageDomElement.querySelector('.btn-pin');
       if (codeButton) {
+        return false;
+      }
+
+      const toolbar = chatMessageDomElement.querySelector('.chat-message-toolbar');
+      if (toolbar === null) {
         return false;
       }
 
@@ -64,17 +203,56 @@ function PluginHelloWorld(
       button.classList.add('btn-default');
       button.classList.add('btn-sm');
       button.classList.add('btn-pin');
-      button.innerText = 'Pin';
+      button.style.padding = '0 5px';
+      button.style.fontSize = '0.8em';
+      button.style.cursor = 'pointer';
+      button.style.borderRadius = '4px';
+      button.style.border = 'none';
+      button.style.backgroundColor = 'transparent';
+      button.innerText = '📌';
+      button.setAttribute('title', 'Pin this message');
       button.addEventListener('click', () => {
         const messageId = chatMessageDomElement.dataset.chatMessageId;
-        alert(`Pin: ${messageId}`);
+
+        // get text from the chat message
+        const messageData = chatMessages.find((message) => message.messageId === messageId);
+
+        const messageText = messageData?.messageText || '';
+        const senderUserId = messageData?.senderUserId || '';
+
+        if (messageText === '') {
+          console.log('error: Message not found');
+          return;
+        }
+
+        const message = {
+          senderUserId,
+          messageText,
+          messageId,
+          pinnedBy: currentUser.data?.name || '',
+        };
+
+        // send message to data-channel
+        pushPinnedMessage(message);
       });
       toolbar.appendChild(button);
 
       return true;
     });
-  }, [chatMessagesToApplyHighlights, chatMessagesDomElements]);
+  }, [chatMessages, chatMessagesDomElements, currentUser]);
+
+  useEffect(() => {
+    const isModerator = currentUser?.data?.role === 'MODERATOR';
+
+    // if not moderator, remove all btn-pin buttons
+    if (!isModerator) {
+      const buttons = document.querySelectorAll('.btn-pin');
+      buttons.forEach((button) => {
+        button.remove();
+      });
+    }
+  }, [currentUser]);
 
   return null;
 }
-export default PluginHelloWorld;
+export default PluginPinMessage;

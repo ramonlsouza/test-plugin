@@ -10,5 +10,12 @@
           "messagesAllowedPerSecond": 10,
           "messagesAllowedPerMinute": 20
       }
-  }
+  },
+  "dataChannels": [
+    {
+        "name": "pinMessage",
+        "pushPermission": ["moderator"],
+        "replaceOrDeletePermission": ["creator", "moderator"]
+    }
+]
 }
