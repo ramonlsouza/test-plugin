@@ -50,8 +50,6 @@ function PluginPinMessage(
       return;
     }
 
-    // TODO: if the message is edited/removed, the pinned message should be unpinned or updated
-    // TODO: is is possible to make it have the same size/position as the chat area?
     const floatingWindow = new FloatingWindow({
       top: 50,
       left: 50,
@@ -221,7 +219,6 @@ function PluginPinMessage(
         const senderUserId = messageData?.senderUserId || '';
 
         if (messageText === '') {
-          console.log('error: Message not found');
           return;
         }
 
