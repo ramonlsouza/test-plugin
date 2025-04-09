@@ -161,6 +161,9 @@ function PluginPinMessage(
   ] = useState<Message[]>([]);
 
   const responseLoadedChatMessages = pluginApi.useLoadedChatMessages();
+  const pinnedMessageId = pinnedMessageResponse?.data?.length >= 1
+    ? pinnedMessageResponse?.data[0]?.payloadJson?.messageId
+    : '';
 
   useEffect(() => {
     if (responseLoadedChatMessages.data) {
@@ -195,6 +198,14 @@ function PluginPinMessage(
         return false;
       }
 
+      // check if the message is pinned
+      const messageId = chatMessageDomElement.dataset.chatMessageId;
+      const isPinned = pinnedMessageId === messageId;
+
+      if (isPinned) {
+        return false;
+      }
+
       // create a new element and append it to the DOM
       const button = document.createElement('button');
       button.classList.add('btn');
@@ -209,9 +220,8 @@ function PluginPinMessage(
       button.style.backgroundColor = 'transparent';
       button.innerText = '📌';
       button.setAttribute('title', 'Pin this message');
+      button.setAttribute('data-message-id', messageId);
       button.addEventListener('click', () => {
-        const messageId = chatMessageDomElement.dataset.chatMessageId;
-
         // get text from the chat message
         const messageData = chatMessages.find((message) => message.messageId === messageId);
 
@@ -236,7 +246,7 @@ function PluginPinMessage(
 
       return true;
     });
-  }, [chatMessages, chatMessagesDomElements, currentUser]);
+  }, [chatMessages, chatMessagesDomElements, currentUser, pinnedMessageResponse]);
 
   useEffect(() => {
     const isModerator = currentUser?.data?.role === 'MODERATOR';
@@ -249,6 +259,17 @@ function PluginPinMessage(
       });
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    // remove button if message is pinned
+    const buttons = document.querySelectorAll('.btn-pin');
+    buttons.forEach((button) => {
+      const { messageId } = (button as HTMLButtonElement).dataset;
+      if (pinnedMessageId === messageId) {
+        button.remove();
+      }
+    });
+  }, [pinnedMessageResponse]);
 
   return null;
 }
