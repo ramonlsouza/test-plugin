@@ -1,20 +1,25 @@
-# Repository of a plugin for BigBlueButton
+# 📌 BigBlueButton Pinned Messages Plugin
 
-## Description
+This plugin adds support for **pinning important messages** in the chat during BigBlueButton conferences. Ideal for keeping key information visible in busy sessions such as online classes, webinars, or team meetings.
 
-A brief description of the plugin including a screenshot and/or a short video.
+![Screenshot from 2025-04-10 14-48-00](https://github.com/user-attachments/assets/45d5c92b-fe07-4a9a-833f-974fffcb2f47)
+
+## Features
+- Pin/unpin messages with a single click (moderator-only)
+- Pinned messages stay visible at the top of the chat panel
+- Works seamlessly with BigBlueButton’s existing chat interface
 
 ## Building the Plugin
 
 To build the plugin for production use, follow these steps:
 
 ```bash
-cd $HOME/src/plugin-template
+cd $HOME/src/pin-message-plugin
 npm ci
 npm run build-bundle
 ```
 
-The above command will generate the `dist` folder, containing the bundled JavaScript file named `<plugin-name>.js`. This file can be hosted on any HTTPS server along with its `manifest.json`.
+The above command will generate the `dist` folder, containing the bundled JavaScript file named `PinMessagePlugin.js`. This file can be hosted on any HTTPS server along with its `manifest.json`.
 
 If you install the Plugin separated to the manifest, remember to change the `javascriptEntrypointUrl` in the `manifest.json` to the correct endpoint.
 
