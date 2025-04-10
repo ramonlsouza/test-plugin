@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
 import {
   FloatingWindow,
   BbbPluginSdk,
@@ -64,7 +65,7 @@ function PluginPinMessage(
             style={{
               backgroundColor: '#f8f8f8',
               borderLeft: '3px solid #ffcc00',
-              padding: '10px 15px',
+              padding: '10px 10px',
               position: 'relative',
             }}
             role="region"
@@ -133,7 +134,11 @@ function PluginPinMessage(
               style={{
                 margin: '8px 0',
                 whiteSpace: 'pre-wrap',
+                userSelect: 'text',
+                padding: '0 5px',
               }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
             >
               {lastPinnedMessage}
             </div>
@@ -143,6 +148,7 @@ function PluginPinMessage(
                 fontSize: '0.9em',
                 color: '#666',
                 marginTop: '5px',
+                padding: '0 5px',
               }}
             >
               {`Pinned by ${pinnedMessageResponse?.data[0]?.payloadJson?.pinnedBy}`}
