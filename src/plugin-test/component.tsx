@@ -136,6 +136,8 @@ function PluginPinMessage(
                 whiteSpace: 'pre-wrap',
                 userSelect: 'text',
                 padding: '0 5px',
+                maxWidth: '20em',
+                overflowWrap: 'break-word',
               }}
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
