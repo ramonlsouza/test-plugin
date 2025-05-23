@@ -8,6 +8,7 @@ import {
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import * as ReactDOM from 'react-dom/client';
+import ReactMarkdown from 'react-markdown';
 
 interface PluginPinMessageProps {
   pluginUuid: string;
@@ -51,9 +52,12 @@ function PluginPinMessage(
       return;
     }
 
+    const chatListContainer = document.querySelector('#chat-list');
+    const { top, left } = chatListContainer.getBoundingClientRect();
+
     const floatingWindow = new FloatingWindow({
-      top: 50,
-      left: 50,
+      top: top - 10,
+      left: left - 10,
       movable: true,
       backgroundColor: '#f1f1f1',
       boxShadow: '2px 2px 10px #777',
@@ -136,11 +140,18 @@ function PluginPinMessage(
                 whiteSpace: 'pre-wrap',
                 userSelect: 'text',
                 padding: '0 5px',
+                maxWidth: '20em',
+                overflowWrap: 'break-word',
               }}
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
-              {lastPinnedMessage}
+              <ReactMarkdown
+                linkTarget="_blank"
+                unwrapDisallowed
+              >
+                {lastPinnedMessage}
+              </ReactMarkdown>
             </div>
             <div
               className="pinned-message-meta"
