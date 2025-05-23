@@ -52,9 +52,12 @@ function PluginPinMessage(
       return;
     }
 
+    const chatListContainer = document.querySelector('#chat-list');
+    const { top, left } = chatListContainer.getBoundingClientRect();
+
     const floatingWindow = new FloatingWindow({
-      top: 50,
-      left: 50,
+      top: top - 10,
+      left: left - 10,
       movable: true,
       backgroundColor: '#f1f1f1',
       boxShadow: '2px 2px 10px #777',
