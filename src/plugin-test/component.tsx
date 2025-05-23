@@ -8,6 +8,7 @@ import {
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import * as ReactDOM from 'react-dom/client';
+import ReactMarkdown from 'react-markdown';
 
 interface PluginPinMessageProps {
   pluginUuid: string;
@@ -142,7 +143,12 @@ function PluginPinMessage(
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
-              {lastPinnedMessage}
+              <ReactMarkdown
+                linkTarget="_blank"
+                unwrapDisallowed
+              >
+                {lastPinnedMessage}
+              </ReactMarkdown>
             </div>
             <div
               className="pinned-message-meta"
